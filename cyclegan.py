@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from spectrogram import pack_spec_and_phase, unpack_spec_and_phase
 
 class ResBlock(nn.Module):
     def __init__(self, channels=384, spectral_norm=True, alpha=0.01, dropout=0):
@@ -49,8 +48,6 @@ class Discriminator(nn.Module):
         self.output_layer = nn.Conv1d(internal_channels, 1, 1, 1, 0)
 
     def forward(self, x):
-        spec, phase = unpack_spec_and_phase(x)
-        x = pack_spec_and_phase(spec, phase)
         x = self.input_layer(x)
         x = self.mid_layers(x)
         x = self.output_layer(x)
