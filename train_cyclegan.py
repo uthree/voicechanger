@@ -9,14 +9,13 @@ import torchaudio
 from tqdm import tqdm
 
 from cyclegan import Generator, Discriminator
-from stt import STTEncoder
 from dataset import WaveFileDirectory
 from spectrogram import wave_to_spec_and_phase, pack_spec_and_phase
 
 
 def load_or_init_models(device=torch.device('cpu')):
-    paths = ["./g_a2b.pt", "./g_b2a.pt", "./d_a.pt", "./d_b.pt", "./stt_encoder.pt"]
-    model_classes = [Generator, Generator, Discriminator, Discriminator, STTEncoder]
+    paths = ["./g_a2b.pt", "./g_b2a.pt", "./d_a.pt", "./d_b.pt"]
+    model_classes = [Generator, Generator, Discriminator, Discriminator]
     models = []
     for cls, p in zip(model_classes, paths):
         if os.path.exists(p):
@@ -60,7 +59,6 @@ parser.add_argument('-lr', '--learningrate', default=2e-4, type=float)
 parser.add_argument('-len', '--length', default=65536*2, type=int)
 parser.add_argument('--consistency', default=10.0, type=float, help="weight of cycle-consistency loss")
 parser.add_argument('--identity', default=1.0, type=float, help="weight of identity loss")
-parser.add_argument('--stt', default=0.0, type=float, help="weight of STT")
 parser.add_argument('--preview', default=False, type=bool, help="flag of writing preview during training")
 parser.add_argument('-psa', '--pitch-shift-a', default=0, type=int)
 parser.add_argument('-psb', '--pitch-shift-b', default=0, type=int)
@@ -84,7 +82,7 @@ if torch.cuda.is_available() and device_name != "cuda":
 
 device = torch.device(device_name)
 
-Gab, Gba, Da, Db, STT = load_or_init_models(device)
+Gab, Gba, Da, Db = load_or_init_models(device)
 
 ds_a = WaveFileDirectory(
         [args.dataset_path_a],
@@ -119,7 +117,6 @@ L1 = nn.L1Loss()
 
 Lcyc = args.consistency
 Lid = args.identity
-Lstt = args.stt
 
 for epoch in range(args.epoch):
     tqdm.write(f"Epoch #{epoch}")
@@ -135,7 +132,7 @@ for epoch in range(args.epoch):
         real_a = pack_spec_and_phase(s, p).detach()
         real_b = Tb(real_b.to(device))
         s, p = wave_to_spec_and_phase(real_b)
-        real_v = pack_spec_and_phase(s, p).detach()
+        real_b = pack_spec_and_phase(s, p).detach()
 
         # Train G.
         OGab.zero_grad()
@@ -148,13 +145,9 @@ for epoch in range(args.epoch):
             recon_b = Gab(fake_a)
             loss_G_cyc = L1(recon_b, real_b) + L1(recon_a, real_a)
             loss_G_id = L1(Gab(real_b), real_b) + L1(Gba(real_a), real_a)
-            if args.stt != 0.0:
-                loss_G_stt = STT.feat_loss(fake_b, real_a) + STT.feat_loss(fake_a, real_b)
-            else:
-                loss_G_stt = torch.tensor([0]).to(device)
             loss_G_adv = F.relu(-Db(cutmid(fake_b))).mean() +\
                 F.relu(-Da(cutmid(fake_a))).mean()
-            loss_G = loss_G_adv + loss_G_id * Lid + loss_G_cyc * Lcyc + loss_G_stt * Lstt
+            loss_G = loss_G_adv + loss_G_id * Lid + loss_G_cyc * Lcyc
 
         scaler.scale(loss_G).backward()
 
@@ -189,7 +182,7 @@ for epoch in range(args.epoch):
 
         scaler.update()
         
-        tqdm.write(f"Id: {loss_G_id.item():.4f}, Adv.: {loss_G_adv.item():.4f}, Cyc.: {loss_G_cyc.item():.4f}, STT: {loss_G_stt.item():.4f}")
+        tqdm.write(f"Id: {loss_G_id.item():.4f}, Adv.: {loss_G_adv.item():.4f}, Cyc.: {loss_G_cyc.item():.4f}")
         bar.set_description(desc=f"G: {loss_G.item():.4f}, D: {loss_D.item():.4f}")
         bar.update(N)
 

@@ -128,10 +128,12 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-.pt
-.pth
-.wav
-.mp4
-.ogg
-.png
-.jpg
+*.pt
+*.pth
+*.wav
+*.mp4
+*.ogg
+*.png
+*.jpg
+*.swp
+*.swo
