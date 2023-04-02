@@ -57,9 +57,7 @@ for i, fname in enumerate(os.listdir(args.input)):
         wf, sr = torchaudio.load(os.path.join(args.input, fname))
         wf = wf * args.input_gain
         s, p = wave_to_spec_and_phase(wf)
-        data = pack_spec_and_phase(s, p)
-        data = G(data)
-        s, p = unpack_spec_and_phase(data)
+        s = G(s)
         wf = spec_and_phase_to_wave(s, p)
         wf = wf * args.gain
         wf = wf.to(torch.float32).to('cpu').detach()
