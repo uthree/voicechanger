@@ -129,10 +129,10 @@ for epoch in range(args.epoch):
         # Pitch Shift
         real_a = Ta(real_a.to(device))
         s, p = wave_to_spec_and_phase(real_a)
-        real_a = pack_spec_and_phase(s, p).detach()
+        real_a = s.detach()
         real_b = Tb(real_b.to(device))
         s, p = wave_to_spec_and_phase(real_b)
-        real_b = pack_spec_and_phase(s, p).detach()
+        real_b = s.detach()
 
         # Train G.
         OGab.zero_grad()

@@ -24,7 +24,7 @@ class ResBlock(nn.Module):
 
 
 class Generator(nn.Module):
-    def __init__(self, input_channels=771, internal_channels=384, num_layers=8):
+    def __init__(self, input_channels=257, internal_channels=384, num_layers=8):
         super().__init__()
         self.input_layer = nn.Conv1d(input_channels, internal_channels, 1, 1, 0)
         self.mid_layers = nn.Sequential(
@@ -39,7 +39,7 @@ class Generator(nn.Module):
 
 
 class Discriminator(nn.Module):
-    def __init__(self, input_channels=771, internal_channels=384, num_layers=8):
+    def __init__(self, input_channels=257, internal_channels=384, num_layers=8):
         super().__init__()
         self.input_layer = nn.utils.spectral_norm(
                 nn.Conv1d(input_channels, internal_channels, 5, 1, 0))
