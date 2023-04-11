@@ -4,6 +4,7 @@ import glob
 from tqdm import tqdm
 import os
 
+
 class WaveFileDirectory(torch.utils.data.Dataset):
     def __init__(self, source_dir_paths=[], length=65536, max_files=-1, sampling_rate=44100):
         super().__init__()
@@ -37,6 +38,4 @@ class WaveFileDirectory(torch.utils.data.Dataset):
 
     def __len__(self):
         return len(self.data)
-
-
 
