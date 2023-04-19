@@ -137,3 +137,11 @@ dmypy.json
 *.jpg
 *.swp
 *.swo
+
+# macOS
+.DS_Store/
+.Spotlight-V100/
+
+# macOS / Freedesktop.org
+.Trashes/
+
