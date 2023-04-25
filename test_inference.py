@@ -39,4 +39,5 @@ for i, path in enumerate(paths):
         spec = linear_to_mel(lin_spec)
     wf = vocoder(spec)
     wf = torchaudio.functional.resample(wf, 22050, sr)[0]
+    wf = wf.detach()
     torchaudio.save(filepath=os.path.join("./outputs/", f"{i}.wav"), src=wf, sample_rate=sr)
