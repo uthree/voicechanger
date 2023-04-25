@@ -3,7 +3,7 @@ import json
 import torchaudio
 import os
 import glob
-from spectrogram import linear_spectrogram, linear_to_mel
+from spectrogram import linear_spectrogram, linear_to_mel, plot_spectrogram
 from cyclegan import Generator as Convertor
 import torch
 
@@ -31,9 +31,12 @@ paths = glob.glob("./inputs/*.wav")
 for i, path in enumerate(paths):
     wf, sr = torchaudio.load(path)
     wf = torchaudio.functional.resample(wf, sr, 22050)
-    lin_spec = linear_spectrogram(wf)
-    lin_spec = convertor(lin_spec)
-    spec = linear_to_mel(lin_spec)
+    with torch.no_grad():
+        lin_spec = linear_spectrogram(wf)
+        plot_spectrogram(lin_spec[0], f"./outputs/{i}_input.png")
+        lin_spec = convertor(lin_spec)
+        plot_spectrogram(lin_spec[0], f"./outputs/{i}_output.png")
+        spec = linear_to_mel(lin_spec)
     wf = vocoder(spec)
     wf = torchaudio.functional.resample(wf, 22050, sr)[0]
     torchaudio.save(filepath=os.path.join("./outputs/", f"{i}.wav"), src=wf, sample_rate=sr)
