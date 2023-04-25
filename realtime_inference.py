@@ -122,7 +122,7 @@ while True:
             # Convert Spectrogram
             spec = convertor(spec)
             # pass Vocoder
-            ata = vocoder(linear_to_mel(spec))
+            data = vocoder(linear_to_mel(spec))
             # Upsample
             data = torchaudio.functional.resample(data, 22050, 44100)
             data = data[0]
