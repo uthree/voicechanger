@@ -120,7 +120,7 @@ while True:
             # to spectrogram
             spec = linear_spectrogram(data)
             # convert voice
-            # spec = convertor(spec)
+            spec = convertor(spec)
             # pass Vocoder
             data = vocoder(linear_to_mel(spec))
             # Upsample
