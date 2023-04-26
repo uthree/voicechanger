@@ -133,7 +133,7 @@ for epoch in range(args.epoch):
 
         # Resample
         real_a = torchaudio.functional.resample(real_a, 44100, 22050)
-        real_b = torchaudio.functional.resample(real_a, 44100, 22050)
+        real_b = torchaudio.functional.resample(real_b, 44100, 22050)
         
         # Convert waveform to spectrogram
         real_a = linear_spectrogram(Ta(real_a.to(device) * args.gain_a))
