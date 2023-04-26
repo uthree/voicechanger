@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 
 class ResBlock(nn.Module):
-    def __init__(self, channels=384, spectral_norm=True, alpha=0.01, dropout=0):
+    def __init__(self, channels=256, spectral_norm=True, alpha=0.01, dropout=0):
         super().__init__()
         self.c1 = nn.Conv1d(channels, channels, 5, 1, 2)
         self.act = nn.LeakyReLU(alpha)
@@ -24,7 +24,7 @@ class ResBlock(nn.Module):
 
 
 class Generator(nn.Module):
-    def __init__(self, input_channels=513, internal_channels=384, num_layers=7):
+    def __init__(self, input_channels=513, internal_channels=256, num_layers=7):
         super().__init__()
         self.input_layer = nn.Conv1d(input_channels, internal_channels, 1, 1, 0)
         self.mid_layers = nn.Sequential(
@@ -39,7 +39,7 @@ class Generator(nn.Module):
 
 
 class Discriminator(nn.Module):
-    def __init__(self, input_channels=513, internal_channels=384, num_layers=6):
+    def __init__(self, input_channels=513, internal_channels=256, num_layers=6):
         super().__init__()
         self.input_layer = nn.utils.spectral_norm(
                 nn.Conv1d(input_channels, internal_channels, 5, 1, 0))
