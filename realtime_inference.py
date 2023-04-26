@@ -122,9 +122,10 @@ while True:
             # convert voice
             spec = convertor(spec)
             # pass Vocoder
-            data = vocoder(linear_to_mel(spec))
+            data = vocoder(linear_to_mel(spec))[0]
             # Upsample
             data = torchaudio.functional.resample(data, 22050, 44100)
+            print(data.shape)
             data = data[0]
     data = data.cpu().numpy()
     data = (data) * 32768
