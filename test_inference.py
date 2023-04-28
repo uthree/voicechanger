@@ -48,7 +48,9 @@ for i, path in enumerate(paths):
     with torch.no_grad():
         print(f"convertiong {path}")
         lin_spec = linear_spectrogram(wf)
+        plot_spectrogram(lin_spec.detach().cpu()[0], os.path.join("./outputs/", f"{i}_input.png"))
         lin_spec = convertor(lin_spec)
+        plot_spectrogram(lin_spec.detach().cpu()[0], os.path.join("./outputs/", f"{i}_output.png"))
         spec = linear_to_mel(lin_spec)
     wf = vocoder(spec)
     wf = torchaudio.functional.resample(wf, 22050, sr)[0] * args.gain
