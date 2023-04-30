@@ -48,6 +48,7 @@ class Discriminator(nn.Module):
         self.output_layer = nn.Conv1d(internal_channels, 1, 1, 1, 0)
 
     def forward(self, x):
+        x = x + torch.randn(*x.shape, device=x.device) * 0.01
         x = self.input_layer(x)
         x = self.mid_layers(x)
         x = self.output_layer(x)
