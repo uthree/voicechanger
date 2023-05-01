@@ -66,7 +66,7 @@ parser.add_argument('-psa', '--pitch-shift-a', default=0, type=int)
 parser.add_argument('-psb', '--pitch-shift-b', default=0, type=int)
 parser.add_argument('-ga', '--gain-a', default=1, type=float)
 parser.add_argument('-gb', '--gain-b', default=1, type=float)
-parser.add_argument('-gacc', 'gradient-accumulation', type=int, default=4)
+parser.add_argument('-gacc', '--gradient-accumulation', type=int, default=4)
 parser.add_argument('--compile', default=False, type=bool)
 
 args = parser.parse_args()
@@ -194,8 +194,7 @@ for epoch in range(args.epoch):
         if batch % grad_accm == 0:
             scaler.step(ODa)
             scaler.step(ODb)
-
-        scaler.update()
+            scaler.update()
         
         tqdm.write(f"Id: {loss_G_id.item():.4f}, Adv.: {loss_G_adv.item():.4f}, Cyc.: {loss_G_cyc.item():.4f}")
         bar.set_description(desc=f"G: {loss_G.item():.4f}, D: {loss_D.item():.4f}")
