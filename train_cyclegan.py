@@ -66,10 +66,13 @@ parser.add_argument('-psa', '--pitch-shift-a', default=0, type=int)
 parser.add_argument('-psb', '--pitch-shift-b', default=0, type=int)
 parser.add_argument('-ga', '--gain-a', default=1, type=float)
 parser.add_argument('-gb', '--gain-b', default=1, type=float)
+parser.add_argument('-gacc', 'gradient-accumulation', type=int, default=4)
 parser.add_argument('--compile', default=False, type=bool)
 
 args = parser.parse_args()
 device_name = args.device
+
+grad_accm = args.gradient_accumulation
 
 print(f"selected device: {device_name}")
 if device_name == 'cuda':
@@ -140,8 +143,9 @@ for epoch in range(args.epoch):
         real_b = linear_spectrogram(Tb(real_b.to(device) * args.gain_b))
 
         # Train G.
-        OGab.zero_grad()
-        OGba.zero_grad()
+        if batch % grad_accm == 0:
+            OGab.zero_grad()
+            OGba.zero_grad()
 
         with torch.cuda.amp.autocast(enabled=args.fp16):
             fake_b = Gab(real_a)
@@ -166,13 +170,15 @@ for epoch in range(args.epoch):
         fake_b = fake_b.detach()
         recon_a = recon_a.detach()
         recon_b = recon_b.detach()
-
-        scaler.step(OGab)
-        scaler.step(OGba)
-
-        # Train D.
-        ODa.zero_grad()
-        ODb.zero_grad()
+        
+        if batch % grad_accm == 0:
+            scaler.step(OGab)
+            scaler.step(OGba)
+        
+        if batch % grad_accm == 0:
+            # Train D.
+            ODa.zero_grad()
+            ODb.zero_grad()
 
         with torch.cuda.amp.autocast(enabled=args.fp16):
             loss_D = F.relu(0.5 + Da(cutmid(fake_a))).mean() +\
@@ -184,9 +190,10 @@ for epoch in range(args.epoch):
 
         nn.utils.clip_grad_norm_(Da.parameters(), max_norm=1.0, norm_type=2.0)
         nn.utils.clip_grad_norm_(Db.parameters(), max_norm=1.0, norm_type=2.0)
-
-        scaler.step(ODa)
-        scaler.step(ODb)
+        
+        if batch % grad_accm == 0:
+            scaler.step(ODa)
+            scaler.step(ODb)
 
         scaler.update()
         
