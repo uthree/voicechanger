@@ -1,5 +1,6 @@
 import argparse
 import os
+import random
 
 import torch
 import torch.nn as nn
@@ -61,6 +62,7 @@ parser.add_argument('-lr', '--learningrate', default=2e-4, type=float)
 parser.add_argument('-len', '--length', default=65536*2, type=int)
 parser.add_argument('--consistency', default=10.0, type=float, help="weight of cycle-consistency loss")
 parser.add_argument('--identity', default=1.0, type=float, help="weight of identity loss")
+parser.add_argument('--feature-matching', default=1.0, type=float, help="weight of feature-matching loss")
 parser.add_argument('--preview', default=False, type=bool, help="flag of writing preview during training")
 parser.add_argument('-psa', '--pitch-shift-a', default=0, type=int)
 parser.add_argument('-psb', '--pitch-shift-b', default=0, type=int)
@@ -125,6 +127,7 @@ L1 = nn.L1Loss()
 
 Lcyc = args.consistency
 Lid = args.identity
+Lfeat = args.feature_matching
 
 for epoch in range(args.epoch):
     tqdm.write(f"Epoch #{epoch}")
@@ -154,12 +157,14 @@ for epoch in range(args.epoch):
             recon_b = Gab(fake_a)
             loss_G_cyc = L1(recon_b, real_b) + L1(recon_a, real_a)
             loss_G_id = L1(Gab(real_b), real_b) + L1(Gba(real_a), real_a)
+            loss_G_feat = Da.feature_matching_loss(recon_a, real_a) +\
+                Db.feature_matching_loss(recon_b, real_b)
 
             loss_G_adv = F.relu(-Db(cutmid(fake_b))).mean() +\
                 F.relu(-Da(cutmid(fake_a))).mean() +\
                 F.relu(-Db(cutmid(recon_b))).mean() +\
                 F.relu(-Da(cutmid(recon_a))).mean()
-            loss_G = loss_G_adv + loss_G_id * Lid + loss_G_cyc * Lcyc
+            loss_G = loss_G_adv + loss_G_id * Lid + loss_G_cyc * Lcyc + loss_G_feat * Lfeat
 
         scaler.scale(loss_G).backward()
 
@@ -196,7 +201,7 @@ for epoch in range(args.epoch):
             scaler.step(ODb)
             scaler.update()
         
-        tqdm.write(f"Id: {loss_G_id.item():.4f}, Adv.: {loss_G_adv.item():.4f}, Cyc.: {loss_G_cyc.item():.4f}")
+        tqdm.write(f"Id: {loss_G_id.item():.4f}, Adv.: {loss_G_adv.item():.4f}, Cyc.: {loss_G_cyc.item():.4f}, Feat.: {loss_G_feat.item():.4f}")
         bar.set_description(desc=f"G: {loss_G.item():.4f}, D: {loss_D.item():.4f}")
         bar.update(N)
 

@@ -53,3 +53,16 @@ class Discriminator(nn.Module):
         x = self.mid_layers(x)
         x = self.output_layer(x)
         return x
+
+    def feature_matching_loss(self, x, y):
+        x = self.input_layer(x)
+        out = 0
+        with torch.no_grad():
+            y = self.input_layer(y)
+        for l in self.mid_layers:
+            x = l(x)
+            with torch.no_grad():
+                y = l(y)
+            out += (x-y).abs().mean()
+        return out
+
