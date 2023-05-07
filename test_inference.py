@@ -46,7 +46,7 @@ for i, path in enumerate(paths):
     wf = wf.to(device)
     wf = torchaudio.functional.resample(wf, sr, 22050) * args.input_gain
     with torch.no_grad():
-        print(f"convertiong {path}")
+        print(f"converting {path}")
         lin_spec = linear_spectrogram(wf)
         plot_spectrogram(lin_spec.detach().cpu()[0], os.path.join("./outputs/", f"{i}_input.png"))
         lin_spec = convertor(lin_spec)
