@@ -217,4 +217,5 @@ for epoch in range(args.epoch):
                 plot_spectrogram(real_a.detach().to(torch.float32).cpu()[0], "preview_a_real.png")
                 plot_spectrogram(real_b.detach().to(torch.float32).cpu()[0], "preview_b_real.png")
 
-
+save_models(Gab, Gba, Da, Db)
+print("Training complete!")
