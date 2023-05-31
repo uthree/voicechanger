@@ -60,8 +60,8 @@ parser.add_argument('-fp16', default=False, type=bool)
 parser.add_argument('-m', '--maxdata', default=-1, type=int, help="max dataset size")
 parser.add_argument('-lr', '--learningrate', default=2e-4, type=float)
 parser.add_argument('-len', '--length', default=65536*2, type=int)
-parser.add_argument('--consistency', default=1.0, type=float, help="weight of cycle-consistency loss")
-parser.add_argument('--identity', default=5.0, type=float, help="weight of identity loss")
+parser.add_argument('--consistency', default=5.0, type=float, help="weight of cycle-consistency loss")
+parser.add_argument('--identity', default=0.2, type=float, help="weight of identity loss")
 parser.add_argument('--feature-matching', default=5.0, type=float, help="weight of feature-matching loss")
 parser.add_argument('--preview', default=False, type=bool, help="flag of writing preview during training")
 parser.add_argument('-psa', '--pitch-shift-a', default=0, type=int)
@@ -136,10 +136,6 @@ for epoch in range(args.epoch):
         if real_a.shape[0] != real_b.shape[0]:
             continue
         N = real_a.shape[0]
-
-        # Resample
-        real_a = torchaudio.functional.resample(real_a, 44100, 22050)
-        real_b = torchaudio.functional.resample(real_b, 44100, 22050)
         
         # Convert waveform to spectrogram
         real_a = linear_spectrogram(Ta(real_a.to(device) * args.gain_a))
@@ -160,10 +156,13 @@ for epoch in range(args.epoch):
             loss_G_feat = Da.feature_matching_loss(recon_a, real_a) +\
                 Db.feature_matching_loss(recon_b, real_b)
 
-            loss_G_adv = F.relu(-Db(cutmid(fake_b))).mean() +\
-                F.relu(-Da(cutmid(fake_a))).mean() +\
-                F.relu(-Db(cutmid(recon_b))).mean() +\
-                F.relu(-Da(cutmid(recon_a))).mean()
+            logits = Db(cutmid(fake_b)) +\
+                Da(cutmid(fake_a)) +\
+                Db(cutmid(recon_b)) +\
+                Da(cutmid(recon_a))
+            loss_G_adv = 0
+            for logit in logits:
+                loss_G_adv += F.relu(-logit).mean() / len(logits)
             loss_G = loss_G_adv + loss_G_id * Lid + loss_G_cyc * Lcyc + loss_G_feat * Lfeat
 
         scaler.scale(loss_G).backward()
@@ -186,10 +185,13 @@ for epoch in range(args.epoch):
             ODb.zero_grad()
 
         with torch.cuda.amp.autocast(enabled=args.fp16):
-            loss_D = F.relu(0.5 + Da(cutmid(fake_a))).mean() +\
-                F.relu(0.5 + Db(cutmid(fake_b))).mean() +\
-                F.relu(0.5 - Da(real_a)).mean() +\
-                F.relu(0.5 - Db(real_b)).mean()
+            logits_fake = Da(cutmid(fake_a)) + Db(cutmid(fake_b))
+            logits_real = Da(cutmid(real_a)) + Db(cutmid(real_b))
+            loss_D = 0
+            for logit in logits_fake:
+                loss_D += F.relu(0.5 + logit).mean() / len(logits_fake)
+            for logit in logits_real:
+                loss_D += F.relu(0.5 - logit).mean() / len(logits_real)
 
         scaler.scale(loss_D).backward()
 

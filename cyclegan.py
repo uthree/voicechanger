@@ -48,11 +48,13 @@ class Discriminator(nn.Module):
         self.output_layer = nn.Conv1d(internal_channels, 1, 1, 1, 0)
 
     def forward(self, x):
+        logit = []
         x = x + torch.randn(*x.shape, device=x.device) * 0.01
         x = self.input_layer(x)
-        x = self.mid_layers(x)
-        x = self.output_layer(x)
-        return x
+        for l in self.mid_layers:
+            x = l(x)
+            logit += self.output_layer(x)
+        return logit
 
     def feature_matching_loss(self, x, y):
         x = self.input_layer(x)
@@ -63,6 +65,6 @@ class Discriminator(nn.Module):
             x = l(x)
             with torch.no_grad():
                 y = l(y)
-            out += (x-y).abs().mean()
+            out += (x-y).abs().mean() / len(self.mid_layers)
         return out
 

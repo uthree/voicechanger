@@ -6,7 +6,7 @@ import os
 
 
 class WaveFileDirectory(torch.utils.data.Dataset):
-    def __init__(self, source_dir_paths=[], length=65536, max_files=-1, sampling_rate=44100):
+    def __init__(self, source_dir_paths=[], length=65536, max_files=-1, sampling_rate=22050):
         super().__init__()
         print("Loading Data")
         self.path_list = []
