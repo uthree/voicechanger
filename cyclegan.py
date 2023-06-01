@@ -53,7 +53,7 @@ class Discriminator(nn.Module):
         x = self.input_layer(x)
         for l in self.mid_layers:
             x = l(x)
-            logit += self.output_layer(x)
+            logit.append(self.output_layer(x))
         return logit
 
     def feature_matching_loss(self, x, y):
