@@ -55,7 +55,7 @@ parser.add_argument('dataset_path_b')
 parser.add_argument('-d', '--device', default='cpu',
                     help="Device setting. Set this option to cuda if you need to use ROCm.")
 parser.add_argument('-e', '--epoch', default=60, type=int)
-parser.add_argument('-b', '--batch', default=16, type=int)
+parser.add_argument('-b', '--batch', default=64, type=int)
 parser.add_argument('-fp16', default=False, type=bool)
 parser.add_argument('-m', '--maxdata', default=-1, type=int, help="max dataset size")
 parser.add_argument('-lr', '--learningrate', default=2e-4, type=float)
@@ -68,7 +68,7 @@ parser.add_argument('-psa', '--pitch-shift-a', default=0, type=int)
 parser.add_argument('-psb', '--pitch-shift-b', default=0, type=int)
 parser.add_argument('-ga', '--gain-a', default=1, type=float)
 parser.add_argument('-gb', '--gain-b', default=1, type=float)
-parser.add_argument('-gacc', '--gradient-accumulation', type=int, default=4)
+parser.add_argument('-gacc', '--gradient-accumulation', type=int, default=1)
 parser.add_argument('--compile', default=False, type=bool)
 
 args = parser.parse_args()
@@ -151,8 +151,12 @@ for epoch in range(args.epoch):
             fake_a = Gba(real_b)
             recon_a = Gba(fake_b)
             recon_b = Gab(fake_a)
+            id_out_a = Gba(real_a)
+            id_out_b = Gab(real_b)
+
             loss_G_cyc = L1(recon_b, real_b) + L1(recon_a, real_a)
-            loss_G_id = Db.feature_matching_loss(Gab(real_b), real_b) + Da.feature_matching_loss(Gba(real_a), real_a)
+            loss_G_id = Db.feature_matching_loss(id_out_b, real_b) + Da.feature_matching_loss(id_out_a, real_a) +\
+                    L1(id_out_a, real_a) + L1(id_out_b, real_b)
             loss_G_feat = Da.feature_matching_loss(recon_a, real_a) +\
                 Db.feature_matching_loss(recon_b, real_b)
 
