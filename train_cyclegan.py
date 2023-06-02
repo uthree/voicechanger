@@ -62,7 +62,7 @@ parser.add_argument('-lr', '--learningrate', default=2e-4, type=float)
 parser.add_argument('-len', '--length', default=32768, type=int)
 parser.add_argument('--consistency', default=10.0, type=float, help="weight of cycle-consistency loss")
 parser.add_argument('--identity', default=1.0, type=float, help="weight of identity loss")
-parser.add_argument('--feature-matching', default=10.0, type=float, help="weight of feature-matching loss")
+parser.add_argument('--feature-matching', default=5.0, type=float, help="weight of feature-matching loss")
 parser.add_argument('--preview', default=False, type=bool, help="flag of writing preview during training")
 parser.add_argument('-psa', '--pitch-shift-a', default=0, type=int)
 parser.add_argument('-psb', '--pitch-shift-b', default=0, type=int)
@@ -138,8 +138,9 @@ for epoch in range(args.epoch):
         N = real_a.shape[0]
         
         # Convert waveform to spectrogram
-        real_a = linear_spectrogram(Ta(real_a.to(device) * args.gain_a))
-        real_b = linear_spectrogram(Tb(real_b.to(device) * args.gain_b))
+        rand_gain = torch.rand(N, 1,  device=device) * 0.75 + 0.25
+        real_a = linear_spectrogram(Ta(real_a.to(device) * args.gain_a * rand_gain))
+        real_b = linear_spectrogram(Tb(real_b.to(device) * args.gain_b * rand_gain))
 
         # Train G.
         if batch % grad_accm == 0:
