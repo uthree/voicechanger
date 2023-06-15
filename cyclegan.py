@@ -35,6 +35,7 @@ class Generator(nn.Module):
         x = self.input_layer(x)
         x = self.mid_layers(x)
         x = self.output_layer(x)
+        F.relu(x)
         return x
 
 
