@@ -66,6 +66,6 @@ class Discriminator(nn.Module):
             x = l(x)
             with torch.no_grad():
                 y = l(y)
-            out += (x-y).abs().mean() / len(self.mid_layers)
+            out += (x-y).abs().mean()
         return out
 
