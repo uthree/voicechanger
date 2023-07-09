@@ -16,7 +16,8 @@ class ResBlock(nn.Module):
 
     def forward(self, x):
         res = x
-        x = self.act(self.c1(x))
+        x = self.c1(x)
+        x = self.act(x)
         x = F.dropout(x, p=self.dropout_rate)
         x = self.c2(x)
         x = F.dropout(x, p=self.dropout_rate)
@@ -49,13 +50,10 @@ class Discriminator(nn.Module):
         self.output_layer = nn.Conv1d(internal_channels, 1, 1, 1, 0)
 
     def forward(self, x):
-        logit = []
-        x = x + torch.randn(*x.shape, device=x.device) * 0.01
         x = self.input_layer(x)
         for l in self.mid_layers:
             x = l(x)
-            logit.append(self.output_layer(x))
-        return logit
+        return [self.output_layer(x)]
 
     def feature_matching_loss(self, x, y):
         x = self.input_layer(x)
