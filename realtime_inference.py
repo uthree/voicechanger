@@ -117,18 +117,22 @@ while True:
             data = pitch_shift(data)
             # Downsample
             data = torchaudio.functional.resample(data, 44100, 22050)
+            # Calculate loudness
+            loudness = torchaudio.functional.loudness(data, 22050)
             # to spectrogram
             spec = linear_spectrogram(data)
             # convert voice
             spec = convertor(spec)
             # pass Vocoder
             data = vocoder(linear_to_mel(spec))[0]
+            # gain
+            data = torchaudio.functional.gain(data, loudness + args.gain)
             # Upsample
             data = torchaudio.functional.resample(data, 22050, 44100)
             data = data[0]
     data = data.cpu().numpy()
     data = (data) * 32768
-    data = data * args.gain
+    data = data
     data = data.astype(np.int16)
     s = (chunk * buffer_size) // 2 - (chunk // 2)
     e = (chunk * buffer_size) - s
