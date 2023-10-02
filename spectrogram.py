@@ -18,8 +18,6 @@ def spectral_normalize_torch(magnitudes):
 def linear_spectrogram(y, n_fft=1024, num_mels=80, sampling_rate=22050, hop_size=256, win_size=1024, fmin=0, fmax=8000, center=False):
     global mel_basis, hann_window
     if fmax not in mel_basis:
-        mel = librosa_mel_fn(sr=sampling_rate, n_fft=n_fft, n_mels=num_mels, fmin=fmin, fmax=fmax)
-        mel_basis[str(fmax)+'_'+str(y.device)] = torch.from_numpy(mel).float().to(y.device)
         hann_window[str(y.device)] = torch.hann_window(win_size).to(y.device)
 
     y = torch.nn.functional.pad(y.unsqueeze(1), (int((n_fft-hop_size)/2), int((n_fft-hop_size)/2)), mode='reflect')
@@ -47,6 +45,7 @@ def linear_to_mel(spec, n_fft=1024, num_mels=80, sampling_rate=22050, hop_size=2
 def plot_spectrogram(x, save_path="./spectrogram.png", log=True):
     if log:
         x = torch.log10(x ** 2 + 1e-4)
+    x = x.flip(dims=(0,))
     plt.imshow(x)
     plt.savefig(save_path, dpi=200)
 
