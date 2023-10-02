@@ -18,6 +18,7 @@ parser.add_argument('-d', '--device', default='cpu')
 parser.add_argument('-mp', '--model-path', default='./g_a2b.pt')
 parser.add_argument('-ig', '--input-gain', default=1.0, type=float)
 parser.add_argument('-g', '--gain', default=1.0, type=float)
+parser.add_argument('-ps', '--pitch-shift', default=0, type=int)
 
 args = parser.parse_args()
 
@@ -37,6 +38,12 @@ convertor = Convertor()
 convertor.load_state_dict(torch.load(args.model_path, map_location=device))
 convertor = convertor.to(device)
 
+if args.pitch_shift != 0:
+    ps = torchaudio.transforms.PitchShift(22050, args.pitch_shift).to(device)
+else:
+    ps = nn.Identity().to(device)
+
+
 if not os.path.exists("./outputs/"):
     os.mkdir("./outputs")
 
@@ -47,6 +54,7 @@ for i, path in enumerate(paths):
     wf = torchaudio.functional.resample(wf, sr, 22050) * args.input_gain
     with torch.no_grad():
         print(f"converting {path}")
+        ws = ps(wf)
         lin_spec = linear_spectrogram(wf)
         plot_spectrogram(lin_spec.detach().cpu()[0], os.path.join("./outputs/", f"{i}_input.png"))
         lin_spec = convertor(lin_spec)

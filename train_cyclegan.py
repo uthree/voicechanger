@@ -139,8 +139,8 @@ for epoch in range(args.epoch):
         
         # Convert waveform to spectrogram
         rand_gain = torch.rand(N, 1,  device=device) * 0.75 + 0.25
-        real_a = linear_spectrogram(Ta(real_a.to(device) * args.gain_a * rand_gain))
-        real_b = linear_spectrogram(Tb(real_b.to(device) * args.gain_b * rand_gain))
+        real_a = linear_spectrogram(Ta(real_a.to(device) * args.gain_a * rand_gain)).detach()
+        real_b = linear_spectrogram(Tb(real_b.to(device) * args.gain_b * rand_gain)).detach()
 
         # Train G.
         if batch % grad_accm == 0:
