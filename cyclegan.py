@@ -56,6 +56,7 @@ class Discriminator(nn.Module):
         return [self.output_layer(x)]
 
     def feature_matching_loss(self, x, y):
+        x = x = torch.randn_like(x) * 0.02
         x = self.input_layer(x)
         out = 0
         with torch.no_grad():

@@ -41,7 +41,7 @@ convertor = convertor.to(device)
 if args.pitch_shift != 0:
     ps = torchaudio.transforms.PitchShift(22050, args.pitch_shift).to(device)
 else:
-    ps = nn.Identity().to(device)
+    ps = torch.nn.Identity().to(device)
 
 
 if not os.path.exists("./outputs/"):
